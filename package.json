@@ -1,0 +1,39 @@
+{
+  "name": "jscpd-scoped",
+  "version": "0.1.0",
+  "description": "Stateless duplicate-code gates for full repositories and pull requests",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zero-stroke/jscpd-scoped.git"
+  },
+  "homepage": "https://github.com/zero-stroke/jscpd-scoped#readme",
+  "bugs": "https://github.com/zero-stroke/jscpd-scoped/issues",
+  "type": "commonjs",
+  "bin": {
+    "jscpd-scoped": "bin/jscpd-scoped.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "scripts": {
+    "check": "node --check bin/jscpd-scoped.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "jscpd",
+    "duplicate-code",
+    "pull-request",
+    "ci"
+  ],
+  "dependencies": {
+    "jscpd": "5.0.12"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
