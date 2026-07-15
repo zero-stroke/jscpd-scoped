@@ -70,6 +70,13 @@ module.exports = sharedCalculation;
 `;
 }
 
+function vueComponent(increment = 1) {
+  return `<template><div>fixture</div></template>
+<script>
+${duplicateBlock(increment)}</script>
+`;
+}
+
 test('full mode passes clean code and fails with both duplicate locations', () => {
   const repo = initRepo('full');
   write(repo, 'src/a.js', duplicateBlock());
@@ -207,6 +214,22 @@ test('paths with shell syntax, spaces, unicode, and tabs stay literal', () => {
   assert.match(result.stdout, /é\tcopy\.js/);
   assert.doesNotMatch(result.stderr, /MODULE_NOT_FOUND/);
   assert.equal(fs.existsSync(path.join(repo, 'SHOULD_NOT_EXIST')), false);
+});
+
+test('pr mode maps Vue composite report paths back to source files', () => {
+  const repo = initRepo('vue-paths', {
+    formats: ['vue'],
+    ignorePattern: ['(?s)<template[^>]*>.*</template>'],
+  });
+  write(repo, 'src/a.vue', vueComponent());
+  const base = commit(repo, 'base');
+  write(repo, 'src/b.vue', vueComponent());
+  commit(repo, 'copy Vue script');
+
+  const result = cli(repo, 'pr', '--base', base, 'src');
+  assertExit(result, 1, 'a changed Vue endpoint should match its Git source path');
+  assert.match(result.stdout, /src\/b\.vue:\d+-\d+/);
+  assert.doesNotMatch(result.stdout, /\.vue:javascript/);
 });
 
 test('malformed config and report structures fail closed', () => {
