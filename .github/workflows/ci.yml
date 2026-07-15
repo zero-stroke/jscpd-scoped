@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        node: [18, 24]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - run: npm pack --dry-run
+      - name: Smoke packed CLI
+        run: |
+          tarball=$(npm pack --silent)
+          npm install --prefix "$RUNNER_TEMP/packed-cli" "$PWD/$tarball"
+          "$RUNNER_TEMP/packed-cli/node_modules/.bin/jscpd-scoped" --version

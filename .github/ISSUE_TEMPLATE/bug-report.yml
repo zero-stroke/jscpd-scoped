@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a reproducible jscpd-scoped defect
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include proprietary source, credentials, tokens, or secrets. Prefer a minimal synthetic repository.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: jscpd-scoped, Node, and jscpd versions
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options: [full, pr]
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Sanitized command and working-directory shape
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior and exit status
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior, exit status, and sanitized output
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal synthetic reproduction
+    validations:
+      required: true
