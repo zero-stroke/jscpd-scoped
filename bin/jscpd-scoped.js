@@ -239,8 +239,30 @@ function validateReport(report) {
   return report.duplicates;
 }
 
-function normalizeEndpoint(root, endpoint) {
-  const absolute = path.resolve(root, endpoint.name);
+function reportedSourcePath(root, endpointName, format) {
+  const reported = path.resolve(root, endpointName);
+  const suffix = typeof format === 'string' ? `:${format}` : '';
+  let compositeError;
+  if (suffix && endpointName.endsWith(suffix)) {
+    try {
+      return fs.realpathSync(path.resolve(root, endpointName.slice(0, -suffix.length)));
+    } catch (error) {
+      compositeError = error;
+    }
+  }
+
+  try {
+    return fs.realpathSync(reported);
+  } catch (reportedError) {
+    const detail = compositeError
+      ? `${reportedError.message}; source path: ${compositeError.message}`
+      : reportedError.message;
+    throw new CliError(`jscpd reported an unavailable file: ${endpointName} (${detail})`);
+  }
+}
+
+function normalizeEndpoint(root, endpoint, format) {
+  const absolute = reportedSourcePath(root, endpoint.name, format);
   const relative = repositoryPath(
     root,
     absolute,
@@ -290,8 +312,8 @@ function scan(root, scanPaths) {
     }
     return validateReport(report).map((duplicate) => ({
       ...duplicate,
-      firstFile: normalizeEndpoint(root, duplicate.firstFile),
-      secondFile: normalizeEndpoint(root, duplicate.secondFile),
+      firstFile: normalizeEndpoint(root, duplicate.firstFile, duplicate.format),
+      secondFile: normalizeEndpoint(root, duplicate.secondFile, duplicate.format),
     }));
   } finally {
     try {
