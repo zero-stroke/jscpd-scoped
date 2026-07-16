@@ -239,26 +239,34 @@ function validateReport(report) {
   return report.duplicates;
 }
 
-function reportedSourcePath(root, endpointName, format) {
-  const reported = path.resolve(root, endpointName);
-  const suffix = typeof format === 'string' ? `:${format}` : '';
-  let compositeError;
-  if (suffix && endpointName.endsWith(suffix)) {
-    try {
-      return fs.realpathSync(path.resolve(root, endpointName.slice(0, -suffix.length)));
-    } catch (error) {
-      compositeError = error;
-    }
-  }
-
+function realPathResult(candidate) {
   try {
-    return fs.realpathSync(reported);
-  } catch (reportedError) {
-    const detail = compositeError
-      ? `${reportedError.message}; source path: ${compositeError.message}`
-      : reportedError.message;
-    throw new CliError(`jscpd reported an unavailable file: ${endpointName} (${detail})`);
+    return { path: fs.realpathSync(candidate) };
+  } catch (error) {
+    return { error };
   }
+}
+
+function reportedSourcePath(root, endpointName, format) {
+  const reported = realPathResult(path.resolve(root, endpointName));
+  const suffix = typeof format === 'string' ? `:${format}` : '';
+  const source =
+    suffix && endpointName.endsWith(suffix)
+      ? realPathResult(path.resolve(root, endpointName.slice(0, -suffix.length)))
+      : undefined;
+
+  if (reported.path && source?.path && reported.path !== source.path) {
+    throw new CliError(
+      `jscpd reported an ambiguous file: ${endpointName} (both the exact path and composite source exist)`
+    );
+  }
+  if (reported.path) return reported.path;
+  if (source?.path) return source.path;
+
+  const detail = source?.error
+    ? `${reported.error.message}; source path: ${source.error.message}`
+    : reported.error.message;
+  throw new CliError(`jscpd reported an unavailable file: ${endpointName} (${detail})`);
 }
 
 function normalizeEndpoint(root, endpoint, format) {
